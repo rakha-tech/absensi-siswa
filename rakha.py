@@ -2,33 +2,29 @@ from mfrc522 import MFRC522
 from machine import Pin, SPI
 import time
 
-# Pinout HSPI ESP32
-# SCK  -> GPIO 18 | MOSI -> GPIO 23 | MISO -> GPIO 19
-# SDA  -> GPIO 5  | RST  -> GPIO 22
-
-# 1. Turunkan baudrate ke 1MHz (1000000) agar sinyal data lebih stabil & tahan noise
-spi = SPI(2, baudrate=1000000, polarity=0, phase=0)
-
-# 2. Hard Reset RC522 via Pin RST sebelum inisialisasi
-rst_pin = Pin(22, Pin.OUT)
-rst_pin.value(0)
-time.sleep_ms(50)
-rst_pin.value(1)
-time.sleep_ms(50)
+# SPI Hardware ESP32
+spi = SPI(2, baudrate=1000000, polarity=0, phase=0, sck=Pin(18), mosi=Pin(23), miso=Pin(19))
 
 rfid = MFRC522(spi=spi, gpioCs=5, gpioRst=22)
 
-print("Koneksi Siap! Tempelkan Kartu RFID...")
+print("--- MULAI TES MEMBACA KARTU ---")
+print("Tempelkan kartu dan perhatikan terminal...")
 
 while True:
-    status, tag_type = rfid.request(rfid.REQIDL)
+    (status, tag_type) = rfid.request(rfid.REQIDL)
     
+    # Jika kartu terdeteksi oleh request
     if status == rfid.OK:
-        status, raw_uid = rfid.anticoll()
-        if status == rfid.OK:
-            # Format UID 4 byte ke Hex
-            uid_str = "0x" + "".join([f"{x:02X}" for x in raw_uid[:4]])
-            print(f"UID Terbaca: {uid_str}")
-            time.sleep(1) # Delay pembacaan ulang
+        (status, raw_uid) = rfid.anticoll()
+        
+        # Jika proses pembacaan UID (anticoll) berhasil
+        if status == rfid.OK and raw_uid:
+            uid_hex = "0x" + "".join(["%02X" % x for x in raw_uid[:4]])
+            print(">>> KARTU TERBACA! UID:", uid_hex)
+            time.sleep(1)
+        else:
+            # Jika request OK tapi anticoll gagal/goyang
+            print("Kartu terdeteksi, tetapi gagal membaca UID (Coba tempel lebih dekat)...")
+            time.sleep(0.5)
             
-    time.sleep_ms(100)
+    time.sleep_ms(50)

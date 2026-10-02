@@ -48,8 +48,10 @@ class MFRC522:
         self._wreg(0x01, 0x0F)
 
     def antenna_on(self, on=True):
-        if on and ~(self._rreg(0x14) & 0x03):
-            self._set_bit_mask(0x14, 0x03)
+        if on:
+            # Perbaikan bitmask: Aktifkan TxControlReg (0x14) jika bit 0 dan 1 belum set
+            if (self._rreg(0x14) & 0x03) != 0x03:
+                self._set_bit_mask(0x14, 0x03)
         else:
             self._clear_bit_mask(0x14, 0x03)
 
