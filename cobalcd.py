@@ -1,4 +1,4 @@
-from machine import Pin, SPI, SoftI2C, PWM
+from machine import Pin, SPI, SoftI2C
 from mfrc522 import MFRC522
 from i2c_lcd import I2cLcd
 import time
@@ -14,18 +14,7 @@ lcd.putstr("Sistem Siap!\nTempelkan Kartu")
 spi = SPI(2, baudrate=1000000, polarity=0, phase=0, sck=Pin(18), mosi=Pin(23), miso=Pin(19))
 rfid = MFRC522(spi=spi, gpioCs=5, gpioRst=22)
 
-# Inisialisasi Buzzer pada Pin 25 menggunakan PWM
-buzzer = PWM(Pin(25))
-buzzer.duty(0) # Pastikan buzzer mati saat awal
-
-def beep():
-    """Fungsi buzzer dengan frekuensi nyaring (2700 Hz)"""
-    buzzer.freq(2700)
-    buzzer.duty(512)   # Tetap di 50% untuk amplitudo maksimal
-    time.sleep(0.15)
-    buzzer.duty(0)
-
-print("--- MULAI SISTEM ABSENSI LENGKAP ---")
+print("--- MULAI SISTEM ABSENSI ---")
 print("Tempelkan kartu ke reader...")
 
 while True:
@@ -39,9 +28,6 @@ while True:
         if status == rfid.OK and raw_uid:
             uid_hex = "0x" + "".join(["%02X" % x for x in raw_uid[:4]])
             print(">>> KARTU TERBACA! UID:", uid_hex)
-            
-            # Nyalakan buzzer tanda sukses
-            beep()
             
             # Tampilkan UID ke layar LCD
             lcd.clear()
